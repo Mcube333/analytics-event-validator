@@ -1,0 +1,72 @@
+{
+  "name": "Demo Shop - checkout funnel tracking plan",
+  "namingConvention": "snake_case",
+  "duplicateWindowMs": 1000,
+  "collectors": [
+    {
+      "name": "demo-analytics",
+      "urlContains": "analytics.example.test/collect",
+      "format": "json",
+      "batchField": "events",
+      "eventField": "event",
+      "attributesField": "properties"
+    },
+    {
+      "name": "ga4",
+      "urlContains": "google-analytics.com/g/collect",
+      "format": "ga4"
+    }
+  ],
+  "pii": {
+    "allowHashed": true,
+    "forbiddenKeys": ["customer_name", "pincode"],
+    "ignoreKeys": []
+  },
+  "events": [
+    {
+      "name": "product_viewed",
+      "expected": true,
+      "attributes": {
+        "product_id": { "type": "string", "required": true },
+        "price": { "type": "number", "required": true },
+        "currency": { "type": "string", "required": true, "allowed": ["INR"] },
+        "variant": { "type": "string", "required": false, "allowed": ["VariantA", "VariantB"] }
+      }
+    },
+    {
+      "name": "add_to_cart",
+      "expected": true,
+      "attributes": {
+        "product_id": { "type": "string", "required": true },
+        "price": { "type": "number", "required": true },
+        "quantity": { "type": "integer", "required": true }
+      }
+    },
+    {
+      "name": "checkout_started",
+      "expected": true,
+      "attributes": {
+        "cart_value": { "type": "number", "required": true },
+        "item_count": { "type": "integer", "required": true },
+        "payment_mode": { "type": "string", "required": false, "allowed": ["upi", "card", "cod"] }
+      }
+    },
+    {
+      "name": "order_placed",
+      "expected": true,
+      "attributes": {
+        "order_id": { "type": "string", "required": true },
+        "order_value": { "type": "number", "required": true },
+        "payment_mode": { "type": "string", "required": true, "allowed": ["upi", "card", "cod"] }
+      }
+    },
+    {
+      "name": "page_view",
+      "expected": false,
+      "allowExtraAttributes": true,
+      "attributes": {
+        "page_location": { "type": "string", "required": true }
+      }
+    }
+  ]
+}

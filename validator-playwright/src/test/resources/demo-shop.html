@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Demo Shop</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 40px; }
+    button { margin: 6px 6px 6px 0; padding: 8px 14px; }
+  </style>
+</head>
+<body>
+  <h1>Demo Shop</h1>
+  <p id="product">Cotton Kurta &middot; Rs. 1,499</p>
+  <button id="view">View product</button>
+  <button id="add">Add to cart</button>
+  <button id="checkout">Checkout</button>
+  <button id="pay">Pay with UPI</button>
+  <p id="status"></p>
+
+  <script>
+    // ?buggy=1 switches on the kinds of tracking bugs seen in real audits.
+    const buggy = new URLSearchParams(location.search).get('buggy') === '1';
+    const customer = { email: 'customer@example.com', phone: '+91 98765 43210' }; // fake test data
+
+    function track(event, properties) {
+      // text/plain body = "simple" CORS request, the same way sendBeacon-based SDKs send it
+      fetch('https://analytics.example.test/collect', {
+        method: 'POST',
+        body: JSON.stringify({ events: [{ event, properties }] })
+      }).catch(() => {});
+    }
+
+    document.getElementById('view').onclick = () => {
+      track(buggy ? 'Product Viewed' : 'product_viewed',
+            { product_id: 'SKU-101', price: 1499, currency: 'INR', variant: 'VariantB' });
+    };
+
+    document.getElementById('add').onclick = () => {
+      const props = buggy
+        ? { product_id: 'SKU-101', price: '1499', quantity: 1, email: customer.email, phone: customer.phone }
+        : { product_id: 'SKU-101', price: 1499, quantity: 1 };
+      track('add_to_cart', props);
+      if (buggy) track('add_to_cart', props); // double-fire bug
+    };
+
+    document.getElementById('checkout').onclick = () => {
+      track('checkout_started', buggy
+        ? { cartValue: 1499, item_count: 1, payment_mode: 'UPI' }
+        : { cart_value: 1499, item_count: 1, payment_mode: 'upi' });
+    };
+
+    document.getElementById('pay').onclick = () => {
+      if (!buggy) {
+        track('order_placed', { order_id: 'ORD-0001', order_value: 1499, payment_mode: 'upi' });
+      }
+      document.getElementById('status').textContent = 'Order placed';
+    };
+  </script>
+</body>
+</html>

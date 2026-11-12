@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Build, unit + browser tests, sample audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: PII check on source
+        run: bash scripts/pii-check.sh
+
+      - name: Install Chromium for the Playwright module
+        run: |
+          mvn -B -q -pl validator-playwright -am install -DskipTests
+          mvn -B -q -pl validator-playwright exec:java -e \
+            -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install --with-deps chromium"
+
+      - name: Unit + browser tests
+        run: mvn -B verify
+
+      - name: Audit sample captures with the CLI
+        run: |
+          JAR=validator-core/target/analytics-event-validator.jar
+          java -jar $JAR --spec samples/tracking-spec.json --har samples/fixtures/clean-journey.har --out reports/clean
+          # The buggy capture MUST fail: exit code 1 proves the gate works
+          set +e
+          java -jar $JAR --spec samples/tracking-spec.json --har samples/fixtures/buggy-journey.har --out reports/buggy
+          code=$?
+          set -e
+          test "$code" -eq 1
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tracking-audit-reports
+          path: |
+            reports/
+            validator-playwright/target/tracking-audit-*.html
