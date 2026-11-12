@@ -1,5 +1,7 @@
 # Analytics Event Validator
 
+[![CI](https://github.com/Mcube333/analytics-event-validator/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Mcube333/analytics-event-validator/actions/workflows/ci.yml) ![Java](https://img.shields.io/badge/Java-17-orange) ![Dependencies](https://img.shields.io/badge/dependencies-zero_%28core%29-brightgreen) ![Playwright](https://img.shields.io/badge/Playwright-1.49-2EAD33)
+
 A Java tool that checks analytics tracking against a **tracking plan** and catches the bugs that break
 dashboards, funnels and privacy compliance: **PII leaking into events, renamed or missing events,
 wrong attribute types and values, naming drift and double-fired events**.
